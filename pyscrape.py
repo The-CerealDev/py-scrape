@@ -1,5 +1,3 @@
-
-
 from selenium import webdriver
 from pyshadow.main import Shadow
 from webdriver_manager.chrome import ChromeDriverManager
@@ -24,7 +22,9 @@ time.sleep(3)
 
 
 tables = driver.find_elements(By.TAG_NAME, 'table')
+main = {
 
+}
 test = {
 
 }  
@@ -47,9 +47,12 @@ for i,table in enumerate(tables[0:2], 1):
         cells = row.find_elements(By.TAG_NAME, "td")
         if len(cells) >=2:
             field = cells[0].text
-            value = [element.text for element in cells[0:]]
+            if not field:
+                field = "--"
+            value = [element.text for element in cells[1:]]
             test[field] = value
     print(test)
+    main.update(test.copy())
     test ={
 
 
@@ -57,20 +60,22 @@ for i,table in enumerate(tables[0:2], 1):
         # print(row.text)
     
 
-
-
-
+main['TOTAL'] = main['       TOTAL:']
+del main["       TOTAL:"]
+total = main["TOTAL"][0].replace(',',"")
+main['TOTAL'][0] = total
+main['(1) Relevant securities owned and/or controlled:'][0] = main['(1) Relevant securities owned and/or controlled:'][0].replace(',','')
     
 data = {
-    "Company":"",
+    "Company":main["(a) Full name of discloser:"][0],
     "Index": "",
-    "Filing": "",
-    "Position Date": "",
-    "Voting Rights": 0,
-    "%(voting)": 0,
-    "Other Instruments": 0,
-    "%(other)": 0,
-    "Total voting rights": 0,
+    "Filing": "Form 8.3",
+    "Position Date": main['(e) Date position held/dealing undertaken:\n     For an opening position disclosure, state the latest practicable date prior to the disclosure'][0],
+    "Voting Rights": int(main['(1) Relevant securities owned and/or controlled:'][0]),
+    "%(voting)": float(main['(1) Relevant securities owned and/or controlled:'][1][:-1]),
+    "Other Instruments": int(main['TOTAL'][0])-int(main['(1) Relevant securities owned and/or controlled:'][0]),
+    "%(other)": float(main['TOTAL'][1][:-1])-float(main['(1) Relevant securities owned and/or controlled:'][1][:-1]),
+    "Total voting rights": main['TOTAL'][0],
     "Shares with no voting rights": 0,
     "%(shares)": 0,
     "%(ISC)": 0,
@@ -78,3 +83,4 @@ data = {
 }
 
 
+print(f"Company : {data['Company']}\nPosition Date : {data["Position Date"]} \nVoting Rights : {data["Voting Rights"]:,}\n%Voting : {data['%(voting)']}\nOther Instruments : {data['Other Instruments']:,}")
