@@ -12,7 +12,8 @@ url = input("Enter the URL to scrape: ")
 if not url:
     url = "https://www.londonstockexchange.com/news-article/market-news/form-8-3-just-group-plc/17344088"
 else:
-    validateURL(url)
+    # validateURL(url)
+    pass
 
 print(f"Getting URL:{url}...")
 service = Service(ChromeDriverManager().install())
@@ -67,7 +68,7 @@ main['TOTAL'][0] = total
 main['(1) Relevant securities owned and/or controlled:'][0] = main['(1) Relevant securities owned and/or controlled:'][0].replace(',','')
     
 data = {
-    "Company":main["(a) Full name of discloser:"][0],
+    "Company":main["(c) Name of offeror/offeree in relation to whose relevant securities this form relates:\n     Use a separate form for each offeror/offeree"][0],
     "Index": "",
     "Filing": "Form 8.3",
     "Position Date": main['(e) Date position held/dealing undertaken:\n     For an opening position disclosure, state the latest practicable date prior to the disclosure'][0],
