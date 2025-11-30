@@ -40,6 +40,11 @@ if not tables:
     shadow = Shadow(driver)
     # tables = shadow.find_elements('table')
     tables = shadow.find_elements('.do')
+    non_voting_fine_print = shadow.find_elements('.do + p .dj')
+    fine_list = non_voting_fine_print[1].text.split()
+    non_voting = fine_list[-7] #negative index to find the non voting rights in the fine print 
+
+
     if not tables:
         print("NOT FOUND, \nthis could be because of the browser or i just havent implemented this right?")
 
@@ -80,11 +85,14 @@ data = {
     "Other Instruments": int(main['TOTAL'][0])-int(main['(1) Relevant securities owned and/or controlled:'][0]),
     "%(other)": float(main['TOTAL'][1][:-1])-float(main['(1) Relevant securities owned and/or controlled:'][1][:-1]),
     "Total voting rights": main['TOTAL'][0],
-    "Shares with no voting rights": 0,
-    "%(shares)": 0,
-    "%(ISC)": 0,
-    "link": ""
+    "Shares with no voting rights": int(non_voting.replace(',','')),
+    "%(shares)": float(f"{((int(non_voting.replace(',','')) / int(main['(1) Relevant securities owned and/or controlled:'][0])) * 100):.2f}"),
+    "%(ISC)": float(f"{((int(non_voting.replace(',','')) / int(main['(1) Relevant securities owned and/or controlled:'][0])) * float(main['(1) Relevant securities owned and/or controlled:'][1][:-1])):.4f}"),
+    "link": url
 }
 
 
 print(f"Company : {data['Company']}\nPosition Date : {data["Position Date"]} \nVoting Rights : {data["Voting Rights"]:,}\n%Voting : {data['%(voting)']}\nOther Instruments : {data['Other Instruments']:,}")
+print(f"Non Voting rights: {data['Shares with no voting rights']:,}")
+print(f"%Non Voting: {data['%(shares)']}")
+print(f"%ISC: {data['%(ISC)']}")
