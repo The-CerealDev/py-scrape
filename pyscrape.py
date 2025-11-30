@@ -22,7 +22,8 @@ driver.get(url)
 time.sleep(3)
 
 
-tables = driver.find_elements(By.TAG_NAME, 'table')
+# tables = driver.find_elements(By.TAG_NAME, 'table')
+tables = driver.find_elements(By.CLASS_NAME,'do')
 main = {
 
 }
@@ -37,7 +38,8 @@ if not tables:
     
     '''
     shadow = Shadow(driver)
-    tables = shadow.find_elements('table')
+    # tables = shadow.find_elements('table')
+    tables = shadow.find_elements('.do')
     if not tables:
         print("NOT FOUND, \nthis could be because of the browser or i just havent implemented this right?")
 
@@ -54,6 +56,7 @@ for i,table in enumerate(tables[0:2], 1):
             test[field] = value
     print(test)
     main.update(test.copy())
+
     test ={
 
 
