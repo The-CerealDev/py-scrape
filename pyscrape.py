@@ -4,6 +4,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+import csv 
 
 def validateURL(url):
     raise NotImplementedError("I Cereal_Dev have not implemented ths feature yet...")
@@ -83,7 +84,7 @@ data = {
     "Voting Rights": int(main['(1) Relevant securities owned and/or controlled:'][0]),
     "%(voting)": float(main['(1) Relevant securities owned and/or controlled:'][1][:-1]),
     "Other Instruments": int(main['TOTAL'][0])-int(main['(1) Relevant securities owned and/or controlled:'][0]),
-    "%(other)": float(main['TOTAL'][1][:-1])-float(main['(1) Relevant securities owned and/or controlled:'][1][:-1]),
+    "%(other)": f"{float(main['TOTAL'][1][:-1])-float(main['(1) Relevant securities owned and/or controlled:'][1][:-1]):.2f}",
     "Total voting rights": main['TOTAL'][0],
     "Shares with no voting rights": int(non_voting.replace(',','')),
     "%(shares)": float(f"{((int(non_voting.replace(',','')) / int(main['(1) Relevant securities owned and/or controlled:'][0])) * 100):.2f}"),
@@ -91,6 +92,12 @@ data = {
     "link": url
 }
 
+filename = 'scrape-data.csv'
+
+with open(filename, mode ='w', newline='') as file:
+    writer = csv.DictWriter(file, fieldnames=data.keys())
+    writer.writeheader()
+    writer.writerow(data)
 
 print(f"Company : {data['Company']}\nPosition Date : {data["Position Date"]} \nVoting Rights : {data["Voting Rights"]:,}\n%Voting : {data['%(voting)']}\nOther Instruments : {data['Other Instruments']:,}")
 print(f"Non Voting rights: {data['Shares with no voting rights']:,}")
