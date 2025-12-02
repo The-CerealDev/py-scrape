@@ -29,11 +29,13 @@ def scrape_links(starting_page):
     for url in urls:
         links.append(url.text)
     print(links)
+    
 
    
 
 def main():
     global last_page
+    global links
     for i in range(100):
                 
         scrape_links(last_page)
@@ -42,10 +44,12 @@ def main():
         with open(page_file, 'w') as file:
             file.write(str(last_page))
 
-        with open("result_links.txt", "a") as file:
+        with open("links_cleaned.txt", "a") as file:
             file.writelines([line + '\n' for line in links])
-
+        links = []
     
 
 if __name__ == "__main__":
     main()
+
+    
