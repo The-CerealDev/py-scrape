@@ -2,6 +2,7 @@ import time
 
 from pyshadow.main import Shadow
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
@@ -13,13 +14,17 @@ def validateURL(url):
 
 def scrape(
     url="https://www.londonstockexchange.com/news-article/market-news/form-8-3-just-group-plc/17344088",
+    driver="pluh",
 ):
     global maindict
     global data
+
     test = {}
     print(f"Getting URL:{url}...")
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service)
+
+    driver.execute_script("window.open('')")
+    driver.switch_to.window(driver.window_handles[-1])
+
     driver.get(url)
     time.sleep(3)
 
@@ -66,9 +71,14 @@ def scrape(
                 test[field] = value
         # print(test)
         maindict.update(test.copy())
+    """
+    The website does not need to be open after this
+    """
+    driver.close()
+    driver.switch_to.window(driver.window_handles[0])
 
-        test = {}
-        # print(row.text)
+    test = {}
+    # print(row.text)
 
     maindict["TOTAL"] = maindict["       TOTAL:"]
     del maindict["       TOTAL:"]
@@ -81,7 +91,7 @@ def scrape(
     data = {
         "Company": maindict[
             "(c) Name of offeror/offeree in relation to whose relevant securities this form relates:\n     Use a separate form for each offeror/offeree"
-        ][0],
+        ][0].replace('''"''', ""),
         "Index": "",
         "Filing": "Form 8.3",
         "Position Date": maindict[
@@ -104,7 +114,7 @@ def scrape(
         "%(ISC)": float(
             f"{((int(non_voting.replace(',', '')) / int(maindict['(1) Relevant securities owned and/or controlled:'][0])) * float(maindict['(1) Relevant securities owned and/or controlled:'][1][:-1])):.4f}"
         ),
-        "Link": url,
+        "Link": url.replace('''"''', ""),
     }
 
     class Company:
@@ -167,6 +177,13 @@ def main():
 
     url = input("Enter the URL to scrape: ")
 
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(options=chrome_options, service=service)
+
     if not url:
         url = "https://www.londonstockexchange.com/news-article/market-news/form-8-3-just-group-plc/17344088"
     else:
@@ -175,7 +192,7 @@ def main():
         pass
 
     data = {}
-    scrape(url)
+    scrape(url, driver)
 
     big_data = []
 
