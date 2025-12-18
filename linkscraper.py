@@ -5,8 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-
-"""
+from selenium.webdriver.chrome.options import Options
+"""                                                                                                                                                                                                                 
 This would be scraping the London Stock Exchange site for the form 8.3 links
 """
 page_file = "lastpage.txt"
@@ -21,8 +21,11 @@ links = []
 
 def scrape_links(starting_page):
     global links
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
     print(f"Going to page {starting_page}")
     news_sect = f"https://www.londonstockexchange.com/search?searchtype=news&page={starting_page}&q=blackrock%208.3"
 
@@ -30,6 +33,11 @@ def scrape_links(starting_page):
     time.sleep(3)
     urls = driver.find_elements(By.CLASS_NAME, "news-link")
     for url in urls:
+        with open("links_cleaned.txt", "r") as file:
+            existing_links = file.read()
+            if url.text in existing_links:
+                print(f"Skipping existing link: {url.text}")
+                continue
         links.append(url.text)
     print(links)
 
