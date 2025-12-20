@@ -15,13 +15,13 @@ with open("links_cleaned.txt", "r") as file:
     for line in file.readlines():
         if line in scraped:
             continue
-        try:
-            obj = pyscrape.scrape(line, driver)
-            var = pd.DataFrame([obj])
-            var.to_csv("scrape-blackrock.csv", mode="a", index=False, header=False)
+        # try:
+        obj = pyscrape.scrape(line, driver)
+        var = pd.DataFrame([obj])
+        var.to_csv("scrape-blackrock.csv", mode="a", index=False, header=False)
 
-        except Exception as e:
-            print(f"Error scraping {line}: {e}")
+        # except Exception as e:
+        #     print(f"Error scraping {line}: {e}")
 
 
 # obj = pyscrape.scrape(

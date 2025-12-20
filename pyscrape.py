@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
-
+import sys
 
 def validateURL(url):
     raise NotImplementedError("I Cereal_Dev have not implemented ths feature yet...")
@@ -20,20 +20,29 @@ def scrape(
     global data
 
     test = {}
-    print(f"Getting URL:{url}...")
+    sys.stdout.write("\033[F")  # Cursor up one line
+    print(f"Getting URL:{url}...\n")
+    
 
     driver.execute_script("window.open('')")
     driver.switch_to.window(driver.window_handles[-1])
 
     driver.get(url)
-    time.sleep(3)
+    time.sleep(2)
 
     # tables = driver.find_elements(By.TAG_NAME, 'table')
-    tables = driver.find_elements(By.CLASS_NAME, "do")
+
+
+    '''
+        the tables form obvservation have classes like em do dj etc
+        an approach to solve this is to search using all the listed class names above
+        however a better approach is to search for all the <table> elements inside the content div 'news-body-content'
+    '''
+    tables = driver.find_elements(By.CSS_SELECTOR, "table")
     for ell in tables:
         print(ell.text)
 
-    if not tables:
+    if (not tables):
         """
 
         if the normal search for <table> elements doesnt bring anything
@@ -41,12 +50,13 @@ def scrape(
 
         """
         shadow = Shadow(driver)
-        tables = shadow.find_elements(".do")
-        non_voting_fine_print = shadow.find_elements(".do + p .dj")
-        fine_list = non_voting_fine_print[1].text.split()
-        non_voting = fine_list[
-            -7
-        ]  # negative index to find the non voting rights in the fine print
+        tables = shadow.find_elements("table")
+        # non_voting_fine_print = shadow.find_elements(".em + p .el")
+        # print(non_voting_fine_print)
+        # fine_list = non_voting_fine_print[1].text.split()
+        # non_voting = fine_list[
+        #     -7
+        # ]  # negative index to find the non voting rights in the fine print
 
         if not tables:
             print(
@@ -71,48 +81,104 @@ def scrape(
                 test[field] = value
         # print(test)
         maindict.update(test.copy())
+
+    non_voting_fine_print = shadow.find_elements("table + p")
+    print(non_voting_fine_print)
+    fine_list = non_voting_fine_print[1].text.split() if 'blackrock' in non_voting_fine_print[1].text.lower() else []
+    if not fine_list:
+        print("Could not find non voting fine print...")
+        non_voting = '0,0'                                                        
+    else:
+
+        non_voting = fine_list[
+            -7
+        ]  # negative index to find the non voting rights in the fine print
+
     """
     The website does not need to be open after this
     """
     driver.close()
     driver.switch_to.window(driver.window_handles[0])
-
+    print(maindict)
     test = {}
     # print(row.text)
 
-    maindict["TOTAL"] = maindict["       TOTAL:"]
-    del maindict["       TOTAL:"]
-    total = maindict["TOTAL"][0].replace(",", "")
-    maindict["TOTAL"][0] = total
-    maindict["(1) Relevant securities owned and/or controlled:"][0] = maindict[
-        "(1) Relevant securities owned and/or controlled:"
-    ][0].replace(",", "")
+    # maindict["TOTAL"] = maindict["       TOTAL:"]
+    # del maindict["       TOTAL:"]
+
+    try:
+        
+        discloser = maindict['(a)   Full name of discloser']
+    except:
+        discloser = maindict['(a) Full name of discloser:']
+    if 'blackrock' not in discloser[0].lower() :
+        print(f'discloser is not Black rock, {discloser[0]}')
+        return'SKIP'
+
+    # for content in maindict:
+    #     if 'blackrock' not in content.lower():
+    #         print(f'Not Blackrock')
+    #         return'skip'
+
+    # total = maindict["Total"][0].replace(",", "")
+    try:
+        
+        maindict['(1)   Relevant securities owned and/or controlled'][0] = maindict[
+            '(1)   Relevant securities owned and/or controlled'
+        ][0].replace(",", "")
+
+        securities = maindict['(1)   Relevant securities owned and/or controlled']
+    except:
+        maindict["(1) Relevant securities owned and/or controlled:"][0] = maindict[
+            "(1) Relevant securities owned and/or controlled:"
+        ][0].replace(",", "")
+
+        securities = maindict['(1) Relevant securities owned and/or controlled:']
+
+    try:
+        total = maindict["Total"]
+    except:
+        total = maindict["       TOTAL:"]
+    try:
+            
+        offeror_name = maindict[
+                "(c) Name of offeror/offeree in relation to whose relevant securities this form relates:\n     Use a separate form for each offeror/offeree"
+            ][0].replace('''"''', "")
+    except:
+        
+        offeror_name = maindict['(c)   Name of offeror/offeree in relation to whose relevant securities this form relates\nUse a separate form for each offeror/offeree'][0].replace('''"''', "")
+
+    try:
+                
+        date = maindict[
+                "(e) Date position held/dealing undertaken:\n     For an opening position disclosure, state the latest practicable date prior to the disclosure"
+            ][0]
+    except:
+
+        date = maindict[
+            '(e)   Date position held/dealing undertaken\nFor an opening position disclosure, state the latest practicable date prior to the disclosure'  ][0]
 
     data = {
-        "Company": maindict[
-            "(c) Name of offeror/offeree in relation to whose relevant securities this form relates:\n     Use a separate form for each offeror/offeree"
-        ][0].replace('''"''', ""),
+        "Company": offeror_name,
         "Index": "",
         "Filing": "Form 8.3",
-        "Position Date": maindict[
-            "(e) Date position held/dealing undertaken:\n     For an opening position disclosure, state the latest practicable date prior to the disclosure"
-        ][0],
+        "Position Date": date,
         "Voting Rights": int(
-            maindict["(1) Relevant securities owned and/or controlled:"][0]
+            securities[0]
         ),
         "%(voting)": float(
-            maindict["(1) Relevant securities owned and/or controlled:"][1][:-1]
+            securities[1][:-1]
         ),
-        "Other Instruments": int(maindict["TOTAL"][0])
-        - int(maindict["(1) Relevant securities owned and/or controlled:"][0]),
-        "%(other)": f"{float(maindict['TOTAL'][1][:-1]) - float(maindict['(1) Relevant securities owned and/or controlled:'][1][:-1]):.2f}",
-        "Total voting rights": maindict["TOTAL"][0],
+        "Other Instruments": int(total[0].replace(",", ""))
+        - int(securities[0]),
+        "%(other)": f"{float(total[1][:-1]) - float(securities[1][:-1]):.2f}",
+        "Total voting rights": total[0],
         "Shares with no voting rights": int(non_voting.replace(",", "")),
         "%(of shares)": float(
-            f"{((int(non_voting.replace(',', '')) / int(maindict['(1) Relevant securities owned and/or controlled:'][0])) * 100):.2f}"
+            f"{((int(non_voting.replace(',', '')) / int(securities[0])) * 100):.2f}"
         ),
         "%(ISC)": float(
-            f"{((int(non_voting.replace(',', '')) / int(maindict['(1) Relevant securities owned and/or controlled:'][0])) * float(maindict['(1) Relevant securities owned and/or controlled:'][1][:-1])):.4f}"
+            f"{((int(non_voting.replace(',', '')) / int(securities[0])) * float(securities[1][:-1])):.4f}"
         ),
         "Link": url.replace('''"''', ""),
     }
