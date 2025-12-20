@@ -12,10 +12,28 @@ import sys
 
 
 def get_links(driver):
-    links = driver.find_elements(By.CLASS_NAME,'dash-link')
-    links = [link.text for link in links]
-    print(links)
-    return()
+
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.dash-link')))
+    for i in range(4):
+                
+        try:
+                    
+            links = driver.find_elements(By.CLASS_NAME,'dash-link')
+            links = [link.get_attribute('href') for link in links]
+            break
+        except:
+            continue
+    with open('links_v2.txt', 'a') as file:
+        for link in links:
+            with open('links_v2.txt', 'r') as rfile:
+                    
+                if link in rfile.readlines():
+                    pass
+                else:
+                    file.write(f'{link}\n')
+
+    # print(links)
+    return True
 
 with open('clicks.txt','r') as file:
     clicks = int(file.readlines()[0])
@@ -43,7 +61,7 @@ except:
 
 fieldselector = '.ng-input'
 selector500 = '#aa9fdb011d19-3'
-
+time.sleep(2)
 nextpageselector = '.page-number.active + .page-number'
 
 fselect = driver.find_element(By.CSS_SELECTOR,fieldselector)
@@ -60,5 +78,34 @@ EC.element_to_be_clickable((By.XPATH, "//span[@class='ng-option-label' and conta
 )
 option_500.click()
 
-time.sleep(2)
-get_links(driver)
+def check_for500(driver):
+    if '500' in driver.find_element(By.CSS_SELECTOR,'.results-header').text:
+        return True
+    else:
+        return False
+    
+def next_page(driver):
+    next_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".page-number.active + a")))
+    nextpage = next_btn.text
+    # next_btn.click()
+    if nextpage != 'Last page':
+        driver.execute_script("arguments[0].click();", next_btn)
+    else:
+        print("End of the Page")
+        driver.close()
+        raise ('Page end reached')
+
+
+
+
+WebDriverWait(driver, 10).until(
+    check_for500
+)
+stuff = False
+while not stuff:
+    current_page = int(driver.find_element(By.CSS_SELECTOR, '.page-number.active').text)
+    print(current_page)
+
+    get_links(driver)
+    next_page(driver)
+driver.close()
