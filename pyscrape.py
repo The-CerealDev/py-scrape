@@ -180,7 +180,7 @@ def scrape(
         "%(ISC)": float(
             f"{((int(non_voting.replace(',', '')) / int(securities[0])) * float(securities[1][:-1])):.4f}"
         ),
-        "Link": url,
+        "Link": url.strip(),
     }
 
     class Company:
