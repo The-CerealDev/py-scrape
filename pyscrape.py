@@ -7,6 +7,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import sys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def validateURL(url):
     raise NotImplementedError("I Cereal_Dev have not implemented ths feature yet...")
@@ -28,6 +30,7 @@ def scrape(
     driver.switch_to.window(driver.window_handles[-1])
 
     driver.get(url)
+    shadow = Shadow(driver)
     time.sleep(2)
 
     # tables = driver.find_elements(By.TAG_NAME, 'table')
@@ -49,7 +52,7 @@ def scrape(
         it searches the shadow roots
 
         """
-        shadow = Shadow(driver)
+        
         tables = shadow.find_elements("table")
         # non_voting_fine_print = shadow.find_elements(".em + p .el")
         # print(non_voting_fine_print)
