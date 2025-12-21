@@ -83,7 +83,7 @@ def scrape(
         maindict.update(test.copy())
 
     non_voting_fine_print = shadow.find_elements("table + p")
-    print(non_voting_fine_print)
+    # print(non_voting_fine_print)
     fine_list = non_voting_fine_print[1].text.split() if 'blackrock' in non_voting_fine_print[1].text.lower() else []
     if not fine_list:
         print("Could not find non voting fine print...")
@@ -99,7 +99,7 @@ def scrape(
     """
     driver.close()
     driver.switch_to.window(driver.window_handles[0])
-    print(maindict)
+    # print(maindict)
     test = {}
     # print(row.text)
 
@@ -180,7 +180,7 @@ def scrape(
         "%(ISC)": float(
             f"{((int(non_voting.replace(',', '')) / int(securities[0])) * float(securities[1][:-1])):.4f}"
         ),
-        "Link": url.replace('''"''', ""),
+        "Link": url,
     }
 
     class Company:
