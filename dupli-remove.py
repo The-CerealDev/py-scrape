@@ -1,7 +1,7 @@
 # Remove duplicate links from a text file
 
 input_file = 'links_v2.txt'
-output_file = 'linksv2_cleaned.txt'
+output_file = 'linksv2code _cleaned.txt'
 
 # Read all lines from the input file
 with open(input_file, 'r') as f:

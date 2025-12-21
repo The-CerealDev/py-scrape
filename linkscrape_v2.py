@@ -1,6 +1,5 @@
 import time
 
-from pyshadow.main import Shadow
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -35,9 +34,6 @@ def get_links(driver):
     # print(links)
     return True
 
-with open('clicks.txt','r') as file:
-    clicks = int(file.readlines()[0])
-    print(clicks)
 
 chrome_options = Options()
 # chrome_options.add_argument("--headless")
