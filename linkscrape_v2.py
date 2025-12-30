@@ -22,64 +22,27 @@ def get_links(driver):
             break
         except:
             continue
+    newlist = []
     with open('links_v2.txt', 'a') as file:
         for link in links:
             with open('links_v2.txt', 'r') as rfile:
                     
-                if link in rfile.readlines():
+                if link.strip() in [l.strip() for l in rfile.readlines()]:
                     pass
                 else:
                     file.write(f'{link}\n')
-
+                    newlist.append(link)
+    return(len(newlist))
+    
     # print(links)
     return True
 
-
-chrome_options = Options()
-# chrome_options.add_argument("--headless")
-# chrome_options.add_argument("--disable-gpu")
-service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service, options=chrome_options)
-
-url = 'https://www.londonstockexchange.com/news?tab=news-explorer&headlinetypes=&excludeheadlines=&headlines=162&period=custom&beforedate=20251220&afterdate=20250101&namecode=Blackrock&page=1'
-
-driver.get(url)
-
-try:
-
-    cookiebtn = WebDriverWait(driver, 10).until(
-EC.visibility_of_element_located((By.CSS_SELECTOR,'#onetrust-reject-all-handler'))
-)
-    cookiebtn.click()
-except:
-    sys.stdout.write('NoCOokie')
-
-
-fieldselector = '.ng-input'
-selector500 = '#aa9fdb011d19-3'
-time.sleep(2)
-nextpageselector = '.page-number.active + .page-number'
-
-fselect = driver.find_element(By.CSS_SELECTOR,fieldselector)
-
-fselect.click()
-
-WebDriverWait(driver, 10).until(
-EC.visibility_of_element_located((By.CSS_SELECTOR, "ng-dropdown-panel"))
-)
-
-
-option_500 = WebDriverWait(driver, 10).until(
-EC.element_to_be_clickable((By.XPATH, "//span[@class='ng-option-label' and contains(text(), 'Show 500 news')]"))
-)
-option_500.click()
-
 def check_for500(driver):
-    if '500' in driver.find_element(By.CSS_SELECTOR,'.results-header').text:
-        return True
-    else:
-        return False
-    
+        if '500' in driver.find_element(By.CSS_SELECTOR,'.results-header').text:
+            return True
+        else:
+            return False
+        
 def next_page(driver):
     next_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".page-number.active + a")))
     nextpage = next_btn.text
@@ -92,16 +55,72 @@ def next_page(driver):
         raise ('Page end reached')
 
 
+def scrape_links():
+        
+    chrome_options = Options()
+    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--disable-gpu")
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+
+    url = 'https://www.londonstockexchange.com/news?tab=news-explorer&headlinetypes=&excludeheadlines=&headlines=162&period=custom&beforedate=20260101&afterdate=20250101&namecode=Blackrock&page=1'
+
+    driver.get(url)
+
+    try:
+
+        cookiebtn = WebDriverWait(driver, 10).until(
+    EC.visibility_of_element_located((By.CSS_SELECTOR,'#onetrust-reject-all-handler'))
+    )
+        cookiebtn.click()
+    except:
+        sys.stdout.write('NoCOokie')
 
 
-WebDriverWait(driver, 10).until(
-    check_for500
-)
-stuff = False
-while not stuff:
-    current_page = int(driver.find_element(By.CSS_SELECTOR, '.page-number.active').text)
-    print(current_page)
+    fieldselector = '.ng-input'
+    
+    time.sleep(2)
+    nextpageselector = '.page-number.active + .page-number'
 
-    get_links(driver)
-    next_page(driver)
-driver.close()
+    fselect = driver.find_element(By.CSS_SELECTOR,fieldselector)
+
+    fselect.click()
+
+    WebDriverWait(driver, 10).until(
+    EC.visibility_of_element_located((By.CSS_SELECTOR, "ng-dropdown-panel"))
+    )
+
+
+    option_500 = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.XPATH, "//span[@class='ng-option-label' and contains(text(), 'Show 500 news')]"))
+    )
+    option_500.click()
+
+    
+
+
+
+
+    WebDriverWait(driver, 10).until(
+        check_for500
+    )
+    stuff = False
+    page_no  = 1
+    while not stuff:
+        current_page = int(driver.find_element(By.CSS_SELECTOR, '.page-number.active').text)
+        print(current_page)
+
+        links = get_links(driver)
+        page_no +=1
+        print(f'Got {links} new links, Next Page({page_no})...')
+        if links == 0:
+            print(f"No new links, Quitting process...")
+            break
+        next_page(driver)
+    driver.close()
+
+def main():
+    scrape_links()
+
+if __name__ == "__main__":
+    main()
