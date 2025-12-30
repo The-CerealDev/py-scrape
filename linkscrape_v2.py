@@ -55,7 +55,7 @@ def next_page(driver):
         raise ('Page end reached')
 
 
-def scrape_links():
+def scrape_links(company= "Blackrock", start = '20250101', end = '20260101'):
         
     chrome_options = Options()
     # chrome_options.add_argument("--headless")
@@ -63,7 +63,7 @@ def scrape_links():
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    url = 'https://www.londonstockexchange.com/news?tab=news-explorer&headlinetypes=&excludeheadlines=&headlines=162&period=custom&beforedate=20260101&afterdate=20250101&namecode=Blackrock&page=1'
+    url = f'https://www.londonstockexchange.com/news?tab=news-explorer&headlinetypes=&excludeheadlines=&headlines=162&period=custom&beforedate={start}&afterdate={end}&namecode={company}&page=1'
 
     driver.get(url)
 
