@@ -137,7 +137,14 @@ def scrape(
         ][0].replace(",", "")
 
         securities = maindict['(1) Relevant securities owned and/or controlled:']
-
+    if securities[0].strip() =='0':
+        print('Zero Security')
+        print(securities)
+        percent = 0 
+    else:
+        percent = (int(non_voting.replace(',', '')) / int(securities[0])) 
+    
+        
     try:
         total = maindict["Total"]
     except:
@@ -161,6 +168,8 @@ def scrape(
         date = maindict[
             '(e)   Date position held/dealing undertaken\nFor an opening position disclosure, state the latest practicable date prior to the disclosure'  ][0]
 
+
+
     data = {
         "Company": offeror_name,
         "Index": "",
@@ -178,10 +187,10 @@ def scrape(
         "Total voting rights": total[0],
         "Shares with no voting rights": int(non_voting.replace(",", "")),
         "%(of shares)": float(
-            f"{((int(non_voting.replace(',', '')) / int(securities[0])) * 100):.2f}"
+            f"{(percent * 100):.2f}"
         ),
         "%(ISC)": float(
-            f"{((int(non_voting.replace(',', '')) / int(securities[0])) * float(securities[1][:-1])):.4f}"
+            f"{(percent * float(securities[1][:-1])):.4f}"
         ),
         "Link": url.strip(),
     }

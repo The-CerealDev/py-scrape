@@ -63,7 +63,7 @@ def scrape_links(company= "Blackrock", start = '20250101', end = '20260101'):
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    url = f'https://www.londonstockexchange.com/news?tab=news-explorer&headlinetypes=&excludeheadlines=&headlines=162&period=custom&beforedate={start}&afterdate={end}&namecode={company}&page=1'
+    url = f'https://www.londonstockexchange.com/news?tab=news-explorer&headlinetypes=&excludeheadlines=&headlines=162&period=custom&beforedate={end}&afterdate={start}&namecode={company}&page=1'
 
     driver.get(url)
 
