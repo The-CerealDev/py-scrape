@@ -241,7 +241,7 @@ def scrape(
 
     # for attr, value in company_instance.__dict__.items():
     #     print(f"{attr}: {value}")
-
+    sys.stdout.write(f'Scraped {url} successfully\n')
     return data
 
 

@@ -33,6 +33,7 @@ def main():
                 try:
                         
                     obj = pyscrape.scrape(line, driver)
+                    sys.stdout.write(f'Scraped {line} successfully\n')
                     var = pd.DataFrame([obj])
                     var.to_csv(scrape_csv, mode="a", quoting=csv.QUOTE_MINIMAL, index=False, header=False, escapechar='\\', lineterminator='\n')
                     break
