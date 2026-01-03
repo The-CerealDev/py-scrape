@@ -14,8 +14,9 @@ import link_analyser
 import linkscrape_v2
 
 def main():
-    
-    p1 = Process(target=linkscrape_v2.scrape_links(company="Blackrock", start='20250101', end='20260101'))
+    company = "Blackrock"
+    #company = "Schroders"
+    p1 = Process(target=linkscrape_v2.scrape_links(company=company, start='20250101', end='20260101'))
     p1.start()
     p2 = Process(target=link_analyser.main())
     p2.start()

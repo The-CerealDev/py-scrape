@@ -17,6 +17,7 @@ def validateURL(url):
 def scrape(
     url="https://www.londonstockexchange.com/news-article/market-news/form-8-3-just-group-plc/17344088",
     driver="pluh",
+    company="Blackrock"
 ):
     global maindict
     global data
@@ -87,7 +88,7 @@ def scrape(
 
     non_voting_fine_print = shadow.find_elements("table + p")
     # print(non_voting_fine_print)
-    fine_list = non_voting_fine_print[1].text.split() if 'blackrock' in non_voting_fine_print[1].text.lower() else []
+    fine_list = non_voting_fine_print[1].text.split() if company.lower() in non_voting_fine_print[1].text.lower() else []
     if not fine_list:
         print("Could not find non voting fine print...")
         non_voting = '0,0'                                                        
@@ -114,8 +115,8 @@ def scrape(
         discloser = maindict['(a)   Full name of discloser']
     except:
         discloser = maindict['(a) Full name of discloser:']
-    if 'blackrock' not in discloser[0].lower() :
-        print(f'discloser is not Black rock, {discloser[0]}')
+    if company.lower() not in discloser[0].lower():
+        print(f'discloser is not {company}, {discloser[0]}')
         return'SKIP'
 
     # for content in maindict:

@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import sys
 
 
-def get_links(driver):
+def get_links(driver, company):
 
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.dash-link')))
     for i in range(4):
@@ -23,10 +23,11 @@ def get_links(driver):
         except:
             continue
     newlist = []
-    with open('links_v2.txt', 'a') as file:
+    linkfile = f'{company.lower()}_links.txt'
+    with open(linkfile, 'a') as file:
         for link in links:
-            with open('links_v2.txt', 'r') as rfile:
-                    
+            with open(linkfile, 'r') as rfile:
+
                 if link.strip() in [l.strip() for l in rfile.readlines()]:
                     pass
                 else:
@@ -110,9 +111,9 @@ def scrape_links(company= "Blackrock", start = '20250101', end = '20260101'):
         current_page = int(driver.find_element(By.CSS_SELECTOR, '.page-number.active').text)
         print(current_page)
 
-        links = get_links(driver)
+        links = get_links(driver, company)
         page_no +=1
-        print(f'Got {links} new links, Next Page({page_no})...')
+        print(f'Got {links} new {company} links, Next Page({page_no})...')
         if links == 0:
             print(f"No new links, Quitting process...")
             break
