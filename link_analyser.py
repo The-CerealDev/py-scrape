@@ -11,14 +11,14 @@ def main():
     service = pyscrape.Service(pyscrape.ChromeDriverManager().install())
     driver = pyscrape.webdriver.Chrome(options=chrome_options, service=service)
 
-    skipped = []
+    
     max_tries = 3
     scrape_csv = 'Blackrock-non-dupe.csv'
     link_list = 'linksv2 _cleaned.txt'
     skipped_links = 'skipped_links.txt'
 
 
-    urls = []
+    
     current_var = pd.read_csv(scrape_csv)
     scraped = set(current_var["Link"].str.strip())
     # print(scraped)

@@ -1,26 +1,26 @@
 # Remove duplicate links from a text file
 
-input_file = 'links_v2.txt'
-output_file = 'linksv2 _cleaned.txt'
+input_file = 'Blackrock_cleaned.csv'
+output_file = 'Blackrock_cleaned.csv'
 
-# Read all lines from the input file
+
 with open(input_file, 'r') as f:
     lines = f.readlines()
 
-# Remove duplicates while preserving order
+
 seen = set()
 unique_lines = []
 
 for line in lines:
-    # Strip whitespace for comparison but keep original formatting
+    
     stripped = line.strip()
     
-    # Skip empty lines and check if we've seen this link before
+    
     if stripped and stripped not in seen:
         seen.add(stripped)
         unique_lines.append(line)
 
-# Write unique lines to the output file
+
 with open(output_file, 'w') as f:
     f.writelines(unique_lines)
 

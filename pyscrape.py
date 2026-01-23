@@ -23,7 +23,7 @@ def scrape(
     global data
 
     test = {}
-    sys.stdout.write("\033[F")  # Cursor up one line
+    sys.stdout.write("\033[F")  # Special Unicode stuff #
     print(f"Getting URL:{url}...\n")
     
 
