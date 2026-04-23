@@ -1,10 +1,10 @@
-# Remove duplicate links from a text file
+# Remove duplicate links from a text file or csv
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import *
 
-input_file = LINK_LIST
-output_file = CLEAN_LINKS
+input_file = SCRAPE_CSV
+output_file = "test.csv"
 
 
 with open(input_file, 'r') as f:

@@ -1,4 +1,4 @@
-''' heres the flow
+''' Here is the flow
     the starting site is the advanced search tool for LSE
     the latest filings are in the first pages 
     
