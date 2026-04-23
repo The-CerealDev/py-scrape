@@ -12,15 +12,6 @@ This project is a web scraping tool designed to automate the collection of finan
 - **Error Handling**: Includes retry logic for failed scrapes and logs skipped links.
 - **Data Validation**: Checks if the discloser matches the target company and validates security data.
 
-## Prerequisites
-
-- Python 3.6+
-- Required libraries: `selenium`, `webdriver-manager`, `pandas`, `pyshadow`
-
-Install dependencies:
-```bash
-pip install selenium webdriver-manager pandas pyshadow
-```
 
 ## Configuration
 
@@ -50,22 +41,6 @@ The script will automatically generate the following files:
    python dupli-remove.py
    ```
 
-## File Structure
-
-```
-py-scrape/
-├── config/
-│   └── config.py
-├── link_flow.py
-├── link_analyser.py
-├── linkscrape_v2.py
-├── pyscrape.py
-├── dupli-remove.py
-├── Blackrock-links.txt
-├── Blackrock-scraped.csv
-├── Blackrock-skipped.txt
-└── README.md
-```
 
 ## License
 
