@@ -1,4 +1,6 @@
 import time
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -7,9 +9,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import sys
 
-
+from config import *
 def get_links(driver, company):
 
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, '.dash-link')))
@@ -23,7 +24,7 @@ def get_links(driver, company):
         except:
             continue
     newlist = []
-    linkfile = f'{company.lower()}_links.txt'
+    linkfile = LINK_LIST
     with open(linkfile, 'a') as file:
         for link in links:
             with open(linkfile, 'r') as rfile:

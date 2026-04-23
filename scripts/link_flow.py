@@ -6,6 +6,8 @@
 
 
 '''
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from multiprocessing import Process
 
@@ -15,13 +17,12 @@ import linkscrape_v2
 
 from config import COMPANY, START_DATE, END_DATE
 
-#An error in the multiprocessing concurrency of the two function needs to be fixed
 def main():
     
     #company = "Schroders"
-    p1 = Process(target=linkscrape_v2.scrape_links(company=COMPANY, start=START_DATE, end=END_DATE))
+    p1 = Process(target=linkscrape_v2.scrape_links, kwargs={'company': COMPANY, 'start': START_DATE, 'end': END_DATE})
     p1.start()
-    p2 = Process(target=link_analyser.main())
+    p2 = Process(target=link_analyser.main)
     p2.start()
     p1.join()
     p2.join()
