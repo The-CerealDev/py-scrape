@@ -19,7 +19,7 @@ from config import COMPANY, START_DATE, END_DATE
 
 def main():
     
-    #company = "Schroders"
+    #Fixed the multiprocessing concurrency issue by using the Process class instead of the Pool class
     p1 = Process(target=linkscrape_v2.scrape_links, kwargs={'company': COMPANY, 'start': START_DATE, 'end': END_DATE})
     p1.start()
     p2 = Process(target=link_analyser.main)
