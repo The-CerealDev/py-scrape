@@ -1,0 +1,318 @@
+# 🔍 py-scrape — Codebase Analysis & Restructuring Plan
+
+## Current State Overview
+
+Your project is a **London Stock Exchange web scraper** that collects Form 8.3 filing data (voting rights disclosures) for companies like Blackrock. It's built with Selenium + pyShadow and outputs to CSV.
+
+---
+
+## Current Module Map
+
+```mermaid
+graph TD
+    subgraph "Current Flat Structure"
+        LF["link_flow.py<br/><i>Orchestrator</i>"]
+        LS["linkscrape_v2.py<br/><i>Link Collector</i>"]
+        LA["link_analyser.py<br/><i>Batch Scraper</i>"]
+        PS["pyscrape.py<br/><i>Core Scraper</i>"]
+        DR["dupli-remove.py<br/><i>Deduplicate CSV</i>"]
+        CV["csv_validator.py<br/><i>⚠️ Self-admitted useless</i>"]
+    end
+
+    LF -->|"imports"| LS
+    LF -->|"imports"| LA
+    LA -->|"imports pyscrape"| PS
+    LA -.->|"also uses pyscrape.Options,<br/>pyscrape.Service, etc."| PS
+
+    style CV fill:#ff6b6b,color:#fff
+    style DR fill:#ffa94d,color:#fff
+    style LF fill:#69db7c,color:#000
+    style PS fill:#4dabf7,color:#fff
+```
+
+---
+
+## 🚩 Key Problems Identified
+
+### 1. **Flat file structure** — everything in root
+All [.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py) files and data files ([.csv](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/Blackrock_cleaned.csv), [.txt](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/links_v2.txt)) are dumped in the same root folder. No packages, no separation.
+
+### 2. **Tight coupling via global state**
+[pyscrape.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py) uses `global maindict` and `global data` (lines 22-23, 249-250). This means:
+- State leaks between function calls
+- Not thread-safe
+- Hard to test
+
+### 3. **Imports through side-effects**
+[link_analyser.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/link_analyser.py) imports Selenium classes *through* `pyscrape` (`pyscrape.Options`, `pyscrape.Service`, `pyscrape.webdriver`). This is fragile — the analyser depends on `pyscrape`'s internal imports.
+
+### 4. **Hardcoded file paths & company names**
+Filenames like `'Blackrock-non-dupe.csv'`, `'linksv2 _cleaned.txt'`, `'skipped_links.txt'` are sprinkled throughout with no configuration system.
+
+### 5. **Bare `except:` everywhere**
+Multiple bare `except:` blocks silently swallow errors (e.g., [pyscrape.py:L116-117](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py#L116-L117), [L135](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py#L135), [L151](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py#L151)).
+
+### 6. **Multiprocessing bug** in [link_flow.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/link_flow.py)
+```python
+# ❌ BUG: This CALLS the functions immediately, 
+# passing the RETURN VALUE (not the function) to Process
+p1 = Process(target=linkscrape_v2.scrape_links(company=company, ...))
+p2 = Process(target=link_analyser.main())
+```
+Should be:
+```python
+# ✅ Pass the function (not calling it), args separately
+p1 = Process(target=linkscrape_v2.scrape_links, args=(company,), kwargs={'start': '20250101', ...})
+```
+
+### 7. **Dead code**
+- [csv_validator.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/csv_validator.py) — the file literally says "THIS IS COMPLETELY USELESS"
+- [Company](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py#199-227) class defined inside [scrape()](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py#17-247) is instantiated but never returned or used
+- Multiple commented-out blocks throughout
+
+### 8. **No `requirements.txt`**
+The file exists but is empty. Your actual dependencies are: `selenium`, `webdriver-manager`, `pyshadow`, `pandas`.
+
+### 9. **Inconsistent [.gitignore](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/.gitignore)**
+Currently `_pycache_/` — should be `__pycache__/`. Also missing `venv/`, `*.csv`, `*.txt` data files.
+
+---
+
+## 📁 Proposed Restructured File Layout
+
+```
+py-scrape/
+├── pyproject.toml              # Modern project config (replaces setup.py + requirements.txt)
+├── README.md
+├── .gitignore
+│
+├── config/
+│   └── settings.py             # All configuration in one place
+│
+├── scraper/                    # Main package
+│   ├── __init__.py
+│   ├── driver.py               # Selenium driver factory (shared by all modules)
+│   ├── core.py                 # Core scraping logic (from pyscrape.py, no globals)
+│   ├── links.py                # Link collection (from linkscrape_v2.py)
+│   └── models.py               # Company dataclass & data structures
+│
+├── pipeline/                   # Orchestration & processing
+│   ├── __init__.py
+│   ├── runner.py               # Pipeline orchestrator (from link_flow.py + link_analyser.py)
+│   └── dedup.py                # Deduplication utility (from dupli-remove.py)
+│
+├── data/                       # Data files (gitignored)
+│   ├── links/
+│   │   └── blackrock_links.txt
+│   ├── output/
+│   │   └── blackrock.csv
+│   └── skipped/
+│       └── skipped_links.txt
+│
+├── tests/                      # Tests
+│   ├── __init__.py
+│   ├── test_core.py
+│   └── test_links.py
+│
+└── main.py                     # Single entry point
+```
+
+---
+
+## 🔗 Proposed Module Dependency Graph
+
+```mermaid
+graph TD
+    MAIN["main.py<br/><i>CLI entry point</i>"]
+    CFG["config/settings.py<br/><i>Paths, constants, defaults</i>"]
+    DRV["scraper/driver.py<br/><i>Driver factory</i>"]
+    CORE["scraper/core.py<br/><i>Single-page scraper</i>"]
+    LINKS["scraper/links.py<br/><i>Link collector</i>"]
+    MOD["scraper/models.py<br/><i>Company dataclass</i>"]
+    RUN["pipeline/runner.py<br/><i>Orchestrator</i>"]
+    DED["pipeline/dedup.py<br/><i>Deduplication</i>"]
+
+    MAIN --> RUN
+    MAIN --> CFG
+
+    RUN --> CORE
+    RUN --> LINKS
+    RUN --> DED
+    RUN --> CFG
+
+    CORE --> DRV
+    CORE --> MOD
+    CORE --> CFG
+
+    LINKS --> DRV
+    LINKS --> CFG
+
+    DED --> CFG
+
+    style MAIN fill:#69db7c,color:#000
+    style CFG fill:#ffd43b,color:#000
+    style DRV fill:#748ffc,color:#fff
+    style CORE fill:#4dabf7,color:#fff
+    style LINKS fill:#4dabf7,color:#fff
+    style MOD fill:#da77f2,color:#fff
+    style RUN fill:#ff922b,color:#fff
+    style DED fill:#ffa94d,color:#fff
+```
+
+---
+
+## 📋 Implementation Steps
+
+### Phase 1: Foundation (no logic changes)
+
+| # | Task | Details |
+|---|------|---------|
+| 1 | Create directory structure | `scraper/`, `pipeline/`, `config/`, `data/`, `tests/` |
+| 2 | Create `config/settings.py` | Centralize all paths, company name, date ranges, Chrome options |
+| 3 | Create `scraper/models.py` | Move [Company](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py#199-227) class out; convert to `@dataclass` |
+| 4 | Create `scraper/driver.py` | Single `create_driver()` factory function |
+| 5 | Fix [.gitignore](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/.gitignore) | Add `__pycache__/`, `venv/`, `data/`, `*.csv`, `*.txt` |
+| 6 | Populate `requirements.txt` / `pyproject.toml` | `selenium`, `webdriver-manager`, `pyshadow`, `pandas` |
+
+### Phase 2: Refactor Core Modules
+
+| # | Task | Details |
+|---|------|---------|
+| 7 | Refactor [pyscrape.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py) → `scraper/core.py` | Remove globals; pass driver as param; return [Company](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/pyscrape.py#199-227) dataclass |
+| 8 | Refactor [linkscrape_v2.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/linkscrape_v2.py) → `scraper/links.py` | Use driver factory; configurable company/dates |
+| 9 | Refactor [link_analyser.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/link_analyser.py) + [link_flow.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/link_flow.py) → `pipeline/runner.py` | Fix multiprocessing bug; use proper `target=` without calling |
+| 10 | Refactor [dupli-remove.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/dupli-remove.py) → `pipeline/dedup.py` | Make generic, accept input/output paths |
+| 11 | Delete [csv_validator.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/csv_validator.py) | Self-admitted useless |
+
+### Phase 3: Robustness
+
+| # | Task | Details |
+|---|------|---------|
+| 12 | Replace bare `except:` with specific exceptions | `KeyError`, `TimeoutException`, `NoSuchElementException` |
+| 13 | Add logging | Replace `sys.stdout.write()` / `print()` with `logging` module |
+| 14 | Add retry decorator | Replace manual retry loops with `tenacity` or a custom decorator |
+| 15 | Add `main.py` CLI | Use `argparse` for company, dates, mode (links-only, scrape-only, full) |
+| 16 | Add basic tests | Test data parsing, URL validation, dedup logic |
+
+---
+
+## 🧩 Key Code Sketches
+
+### `config/settings.py`
+```python
+from pathlib import Path
+from dataclasses import dataclass
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+
+@dataclass
+class ScrapeConfig:
+    company: str = "Blackrock"
+    start_date: str = "20250101"
+    end_date: str = "20260101"
+    headless: bool = True
+    max_retries: int = 3
+    
+    @property
+    def links_file(self) -> Path:
+        return DATA_DIR / "links" / f"{self.company.lower()}_links.txt"
+    
+    @property
+    def output_csv(self) -> Path:
+        return DATA_DIR / "output" / f"{self.company.lower()}.csv"
+    
+    @property
+    def skipped_file(self) -> Path:
+        return DATA_DIR / "skipped" / "skipped_links.txt"
+```
+
+### `scraper/models.py`
+```python
+from dataclasses import dataclass
+
+@dataclass
+class FilingData:
+    company: str
+    index: str
+    filing: str
+    position_date: str
+    voting_rights: int
+    percent_voting: float
+    other_instruments: int
+    percent_other: str
+    total_voting_rights: str
+    shares_no_voting_rights: int
+    percent_of_shares: float
+    percent_isc: float
+    link: str
+```
+
+### `scraper/driver.py`
+```python
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
+def create_driver(headless: bool = True) -> webdriver.Chrome:
+    """Create and return a configured Chrome WebDriver."""
+    options = Options()
+    if headless:
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    
+    service = Service(ChromeDriverManager().install())
+    return webdriver.Chrome(options=options, service=service)
+```
+
+### `main.py`
+```python
+import argparse
+from config.settings import ScrapeConfig
+from pipeline.runner import run_pipeline
+
+def main():
+    parser = argparse.ArgumentParser(description="LSE Form 8.3 Scraper")
+    parser.add_argument("--company", default="Blackrock")
+    parser.add_argument("--start", default="20250101")
+    parser.add_argument("--end", default="20260101")
+    parser.add_argument("--mode", choices=["links", "scrape", "full"], default="full")
+    parser.add_argument("--no-headless", action="store_true")
+    
+    args = parser.parse_args()
+    config = ScrapeConfig(
+        company=args.company,
+        start_date=args.start,
+        end_date=args.end,
+        headless=not args.no_headless,
+    )
+    run_pipeline(config, mode=args.mode)
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## ⚡ Quick Wins (do these right now)
+
+> [!IMPORTANT]
+> These are bugs and issues you should fix regardless of whether you do the full restructure.
+
+1. **Fix the multiprocessing bug** in [link_flow.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/link_flow.py) — your parallel processes are actually running sequentially
+2. **Fix [.gitignore](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/.gitignore)** — `_pycache_/` → `__pycache__/` and add `venv/`
+3. **Fill [Requirements.txt](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/Requirements.txt)** — it's empty
+4. **Remove [csv_validator.py](file:///c:/Users/Cereal_Dev/Documents/PROJECTS/py-scrape/csv_validator.py)** — it does nothing useful
+
+---
+
+## ❓ Want Me To Implement This?
+
+I can start implementing any or all of these phases. Let me know:
+
+1. **"Do it all"** — I'll restructure the entire project
+2. **"Phase 1 only"** — Just the directory structure and foundation 
+3. **"Fix bugs first"** — I'll fix the quick wins listed above
+4. **"Just the config"** — I'll create the settings module and driver factory only
