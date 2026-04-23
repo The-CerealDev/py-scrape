@@ -56,7 +56,7 @@ def next_page(driver):
         raise ('Page end reached')
 
 
-def scrape_links(company= "Blackrock", start = '20250101', end = '20260101'):
+def scrape_links(company= "Blackrock", start = '20250101', end = '20260101'): #test values with default blackrock if no input
         
     chrome_options = Options()
     # chrome_options.add_argument("--headless")
@@ -121,7 +121,7 @@ def scrape_links(company= "Blackrock", start = '20250101', end = '20260101'):
     driver.close()
 
 def main():
-    scrape_links()
+    scrape_links(company=COMPANY, start=START_DATE, end=END_DATE)
 
 if __name__ == "__main__":
     main()

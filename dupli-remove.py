@@ -1,7 +1,8 @@
 # Remove duplicate links from a text file
+from config import *
 
-input_file = 'Blackrock_cleaned.csv'
-output_file = 'Blackrock_cleaned.csv'
+input_file = LINK_LIST
+output_file = CLEAN_LINKS
 
 
 with open(input_file, 'r') as f:

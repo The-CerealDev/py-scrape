@@ -10,6 +10,8 @@ import sys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from config import COMPANY, START_DATE, END_DATE
+
 def validateURL(url):
     raise NotImplementedError("I Cereal_Dev have not implemented ths feature yet...")
 
@@ -17,7 +19,7 @@ def validateURL(url):
 def scrape(
     url="https://www.londonstockexchange.com/news-article/market-news/form-8-3-just-group-plc/17344088",
     driver="pluh",
-    company="Blackrock"
+    company=COMPANY #Referenced from the config file /config/config.py
 ):
     global maindict
     global data

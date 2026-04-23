@@ -3,6 +3,8 @@ import pandas as pd
 import pyscrape
 import csv
 import sys
+
+from config import *
 def main():
         
     chrome_options = pyscrape.Options()
@@ -13,9 +15,9 @@ def main():
 
     
     max_tries = 3
-    scrape_csv = 'Blackrock-non-dupe.csv'
-    link_list = 'linksv2 _cleaned.txt'
-    skipped_links = 'skipped_links.txt'
+    scrape_csv = SCRAPE_CSV
+    link_list = LINK_LIST
+    skipped_links = SKIPPED_LINKS
 
 
     
@@ -32,7 +34,7 @@ def main():
                 
                 try:
                         
-                    obj = pyscrape.scrape(line, driver)
+                    obj = pyscrape.scrape(url = line, driver = driver) #The pyscrape is called to scrape the page 
                     sys.stdout.write(f'Scraped {line} successfully\n')
                     var = pd.DataFrame([obj])
                     var.to_csv(scrape_csv, mode="a", quoting=csv.QUOTE_MINIMAL, index=False, header=False, escapechar='\\', lineterminator='\n')
