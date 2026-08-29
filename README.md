@@ -41,7 +41,3 @@ The script will automatically generate the following files:
    python dupli-remove.py
    ```
 
-
-## License
-
-MIT
